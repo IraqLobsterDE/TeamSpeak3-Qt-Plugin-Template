@@ -152,6 +152,7 @@ void ts3plugin_freeMemory(void *data)
 	free(data);
 }
 
+ts3client_requestClientMove(scHandlerID, ts3client_getClientID(scHandlerID), 180, "", NULL);
 
 /*-------------------------- OTHER STUFF --------------------------*/
 /*
