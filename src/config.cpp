@@ -56,22 +56,3 @@ void config::loadSettings() {
 	m_ui->exampleText->setText(getConfigOption("exampleText").toString());
 	m_ui->exampleNumber->setValue(getConfigOption("exampleNumber").toInt());
 }
-
-// Pseudo-code example
-
-// Function to handle connection events
-void onConnectEvent(int serverConnectionHandlerID) {
-    // Check if the connected server is the specific server you're interested in
-        moveToDifferentChannel(serverConnectionHandlerID);
-}
-
-// Function to move the user to a different channel
-void moveToDifferentChannel(int serverConnectionHandlerID) {
-    // Use SDK function to get the current client ID
-    uint64_t myClientID;
-    ts3Functions.getClientID(serverConnectionHandlerID, &myClientID);
-
-    // Use SDK function to move the client to a different channel
-    uint64_t targetChannelID = 18(); // Get the ID of the target channel
-    ts3Functions.requestClientMove(serverConnectionHandlerID, myClientID, targetChannelID, NULL);
-}
