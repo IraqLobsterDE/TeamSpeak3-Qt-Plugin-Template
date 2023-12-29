@@ -18,9 +18,9 @@ jobs:
       - name: Set Variables
         # Version is the tag name without the v
         run: |
-          sed -i "s/<version>/$(echo ${GITHUB_REF#refs/tags/v})/g" deploy/package.ini
-          sed -i "s/<version>/$(echo ${GITHUB_REF#refs/tags/v})/g" src/definitions.hpp
-          sed -i "s/<plugin_name>/${{ env.PLUGIN_NAME }}/g" CMakeLists.txt
+          sed -i "1" deploy/package.ini
+          sed -i "1" src/definitions.hpp
+          sed -i "1" CMakeLists.txt
       - name: Archive production artifacts
         uses: actions/upload-artifact@v3
         with:
