@@ -17,8 +17,10 @@ jobs:
         include:
           - os: windows-2019
             arch: x64
+            extension: 'dll'
           - os: ubuntu-latest
             arch: x64
+            extension: 'so'
     runs-on: ${{ matrix.os }}
     
     steps:
@@ -71,4 +73,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.os }}-${{ matrix.arch }}
-          path: ${{ matrix.os == 'windows-2019' && (env.PLUGIN_NAME + '_win' + (matrix.arch == 'x64' && '64' || '32') + '.dll') || (env.PLUGIN_NAME + '_linux_amd64.so') }}
+          path: ${{ env.PLUGIN_NAME }}_${{ matrix.os == 'windows-2019' && 'win' || 'linux' }}_${{ matrix.arch == 'x64' && 'amd64' || 'x86' }}.${{ matrix.extension }}
