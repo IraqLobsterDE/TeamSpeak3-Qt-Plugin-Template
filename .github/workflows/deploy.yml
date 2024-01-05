@@ -1,4 +1,4 @@
-name: Build for Ubuntu and Windows
+name: Build and Deploy
 
 on:
   push:
@@ -10,6 +10,22 @@ env:
   PLUGIN_NAME: QtExamplePlugin
 
 jobs:
+  prebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set Variables
+        run: |
+          sed -i "s/<plugin_name>/${{ env.PLUGIN_NAME }}/g" CMakeLists.txt
+      - name: Archive production artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: prebuild
+          path: |
+            deploy/package.ini
+            src/definitions.hpp
+            CMakeLists.txt
   build:
     strategy:
       fail-fast: false
@@ -17,60 +33,53 @@ jobs:
         include:
           - os: windows-2019
             arch: x64
-            extension: 'dll'
           - os: ubuntu-latest
             arch: x64
-            extension: 'so'
     runs-on: ${{ matrix.os }}
-    
+    needs: prebuild
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
-          submodules: true  # If you have submodules
-
-      - name: Set Variables
-        run: |
-          sed -i "s/QtExamplePlugin/${{ env.PLUGIN_NAME }}/g" CMakeLists.txt
-        if: matrix.os == 'ubuntu-latest'
-
+          submodules: true
+      - name: Download prebuild
+        uses: actions/download-artifact@v3
+        with:
+          name: prebuild
+          path: .
       - name: Setup MSVC (Windows only)
-        uses: ilammy/msvc-dev-cmd@v1
         if: matrix.os == 'windows-2019'
+        uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: ${{ matrix.arch }}
           toolset: 14.0
-
       - name: Install Qt
         uses: jurplel/install-qt-action@v3
         with:
           version: '5.15.2'
           target: 'desktop'
-          arch: ${{ matrix.os == 'windows-2019' && (matrix.arch == 'x64' && 'win64_msvc2019_64' || 'win32_msvc2019' ) || (matrix.os == 'ubuntu-latest' && 'gcc_64' || 'clang_64') }}
+          arch: ${{ matrix.os == 'windows-2019' && 'win64_msvc2019_64' || 'gcc_64' }}
           dir: '${{ github.workspace }}'
           cache: true
           cache-key-prefix: ${{ runner.os }}-${{ matrix.arch }}-Qt
-
       - name: Setup cmake
         uses: jwlawson/actions-setup-cmake@v1.14
-
       - name: Build
         run: |
-          cmake ${{matrix.os == 'windows-2019' && '-A' || ''}} ${{matrix.os == 'windows-2019' && (matrix.arch == 'x64' && 'x64' || 'Win32') || '' }} .
+          cmake ${{matrix.os == 'windows-2019' && '-A' || ''}} ${{matrix.os == 'windows-2019' && 'x64' || '' }} .
           cmake --build . --config Release
-
       - name: Rename release (Windows)
         if: matrix.os == 'windows-2019'
         run: |
-          mv Release/${{ env.PLUGIN_NAME }}.dll ${{ env.PLUGIN_NAME }}_win${{ matrix.arch == 'x64' && '64' || '32' }}.dll
-
+          mv Release/${{ env.PLUGIN_NAME }}.dll ${{ env.PLUGIN_NAME }}_win64.dll
       - name: Rename release (Linux)
         if: matrix.os == 'ubuntu-latest'
         run: |
           mv lib${{ env.PLUGIN_NAME }}.so ${{ env.PLUGIN_NAME }}_linux_amd64.so
-
       - name: Archive production artifacts
         uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.os }}-${{ matrix.arch }}
-          path: ${{ env.PLUGIN_NAME }}_${{ matrix.os == 'windows-2019' && 'win' || 'linux' }}_${{ matrix.arch == 'x64' && 'amd64' || 'x86' }}.${{ matrix.extension }}
+          path: ${{ env.PLUGIN_NAME }}_[win64|linux_amd64].*
+
+# Removed the release job as it's no longer needed.
