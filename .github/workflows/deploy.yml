@@ -80,6 +80,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.os }}-${{ matrix.arch }}
-          path: ${{ env.PLUGIN_NAME }}_[win64|linux_amd64].*
-
+          path: |
+            ${{ env.PLUGIN_NAME }}_win64.dll
+            ${{ env.PLUGIN_NAME }}_linux_amd64.so
 # Removed the release job as it's no longer needed.
